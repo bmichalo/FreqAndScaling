@@ -7,23 +7,37 @@ echo "
 * Description:  $1
 ***************************************************************************************************"
 
-exit
 echo ""
+echo "RHEL Release:"
+echo "-------------"
 cat /etc/redhat-release 
-echo ""
 
+echo ""
+echo "Kernel version:"
+echo "---------------"
 uname -a
+
 echo ""
+echo "tuned profile:"
+echo "--------------"
 tuned-adm active
+
 echo ""
+echo "Boot command line:"
+echo "------------------"
 cat /proc/cmdline 
+
 echo ""
+echo "CPU information:"
+echo "----------------"
 lscpu
 echo ""
 echo ""
 
 echo ""
 echo "x86_energy_perf_policy:"
+echo ""
+echo "where:"
 echo ""
 echo "VALUE STRING        EPB  EPP"
 echo "performance         0    0"
@@ -35,10 +49,10 @@ echo "============================"
 echo ""
 
 x86_energy_perf_policy --cpu 3,51,5,53,7,55,9,57
-
 echo ""
 
 
+echo ""
 echo "CPUFreq Policy Settings:"
 echo "========================"
 
@@ -83,4 +97,25 @@ do
 done
 
 echo ""
+echo "intel_pstate driver information:"
+echo "================================"
+echo ""
+
+if [ -d "/sys/devices/system/cpu/intel_pstate" ]; then
+
+	echo "/sys/devices/system/cpu/intel_pstate/turbo_pct ....... `cat /sys/devices/system/cpu/intel_pstate/turbo_pct`"
+	echo "/sys/devices/system/cpu/intel_pstate/status .......... `cat /sys/devices/system/cpu/intel_pstate/status`"
+	echo "/sys/devices/system/cpu/intel_pstate/num_pstates ..... `cat /sys/devices/system/cpu/intel_pstate/num_pstates`"
+	echo "/sys/devices/system/cpu/intel_pstate/min_perf_pct .... `cat /sys/devices/system/cpu/intel_pstate/min_perf_pct`"
+	echo "/sys/devices/system/cpu/intel_pstate/max_perf_pct .... `cat /sys/devices/system/cpu/intel_pstate/max_perf_pct`"
+	echo "/sys/devices/system/cpu/intel_pstate/no_turbo ........ `cat /sys/devices/system/cpu/intel_pstate/no_turbo`"
+
+else
+	echo "Directory /sys/devices/system/cpu/intel_pstate does not exist"
+fi
+
+echo ""
+echo ""
+
+
 
