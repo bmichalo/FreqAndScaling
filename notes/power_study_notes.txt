@@ -1,0 +1,602 @@
+ 
+
+Tuned:
+------
+Use the TuneD application to optimize the performance profile of your system for a variety of use cases
+
+TuneD is distributed with a number of predefined profiles for use cases such as:
+
+	* High throughput
+
+	* Low latency
+
+	* Saving power
+
+
+Tuned predefined profiles of interest for this study:
+
+	* Performance boosting profiles, in particular high throughput for network
+
+	* Power saving profiles
+
+
+A complete list of predefined tuned profiles for RHEL 8.5:
+
+# tuned-adm list
+Available profiles:
+- accelerator-performance     - Throughput performance based tuning with disabled higher latency STOP states
+- balanced                    - General non-specialized tuned profile
+- cpu-partitioning            - Optimize for CPU partitioning
+- desktop                     - Optimize for the desktop use-case
+- hpc-compute                 - Optimize for HPC compute workloads
+- intel-sst                   - Configure for Intel Speed Select Base Frequency
+- latency-performance         - Optimize for deterministic performance at the cost of increased power consumption
+- network-latency             - Optimize for deterministic performance at the cost of increased power consumption, focused on low latency network performance
+- network-throughput          - Optimize for streaming network throughput, generally only necessary on older CPUs or 40G+ networks
+- optimize-serial-console     - Optimize for serial console use.
+- powersave                   - Optimize for low power consumption
+- throughput-performance      - Broadly applicable tuning that provides excellent performance across a variety of common server workloads
+- virtual-guest               - Optimize for running inside a virtual guest
+- virtual-host                - Optimize for running KVM guests
+
+
+Out of this list, profiles of immediate interest (given Intel Cascade Lake architecture without SST feature):
+
+# tuned-adm list
+- accelerator-performance     - Throughput performance based tuning with disabled higher latency STOP states
+- balanced                    - General non-specialized tuned profile
+- cpu-partitioning            - Optimize for CPU partitioning
+- latency-performance         - Optimize for deterministic performance at the cost of increased power consumption
+- network-latency             - Optimize for deterministic performance at the cost of increased power consumption, focused on low latency network performance
+- network-throughput          - Optimize for streaming network throughput, generally only necessary on older CPUs or 40G+ networks
+- powersave                   - Optimize for low power consumption
+- throughput-performance      - Broadly applicable tuning that provides excellent performance across a variety of common server workloads
+
+
+
+where (as defined at https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/monitoring_and_managing_system_status_and_performance/getting-started-with-tuned_monitoring-and-managing-system-status-and-performance):
+
+accelerator-performance:
+	The accelerator-performance profile contains the same tuning as the throughput-performance profile. 
+	Additionally, it locks the CPU to low C states so that the latency is less than 100us. This improves 
+	the performance of certain accelerators, such as GPUs.
+
+
+balanced:
+	The default power-saving profile. It is intended to be a compromise between performance and power 
+	consumption. It uses auto-scaling and auto-tuning whenever possible. The only drawback is the 
+	increased latency. In the current TuneD release, it enables the CPU, disk, audio, and video plugins, 
+	and activates the conservative CPU governor. The radeon_powersave option uses the dpm-balanced value 
+	if it is supported, otherwise it is set to auto.
+
+	It changes the energy_performance_preference attribute to the normal energy setting. It also changes 
+	the scaling_governor policy attribute to either the conservative or powersave CPU governor.
+
+
+cpu-partitioning:
+	From tuned-profiles-cpu-partitioning(7) man page:
+
+	The  cpu-partitioning  profile partitions the system CPUs into isolated and housekeeping CPUs. This 
+	profile is intended to be used for latency-sensitive workloads.
+
+	An isolated CPU incurs reduced jitter and reduced interruptions by the kernel. This is achieved by clearing 
+	the CPU from user-space processes, movable kernel threads, interruption handlers, kernel timers, etc. The 
+	only fixed source of interruptions is the 1Hz tick maintained by the kernel to keep CPU usage statistics. 
+	Otherwise, the incurred jitter and interruptions, if any, depend on the kernel services used by the thread 
+	running on the isolated CPU.  Threads that run a busy loop without doing system calls, such as user-space 
+	drivers that access the hardware directly, are only expected to be interrupted once a second by the 1Hz tick.
+
+	A housekeeping CPU is the opposite of an isolated CPU. Housekeeping CPUs run all daemons, shell processes, 
+	kernel threads, interruption handlers and work that can be dispatched from isolated CPUs such as disk I/O, 
+	RCU work, timers, etc.
+
+
+latency-performance:
+	A server profile optimized for low latency. It disables power savings mechanisms and enables sysctl settings 
+	that improve latency. CPU governor is set to performance and the CPU is locked to the low C states (by PM QoS).
+
+	It changes the energy_performance_preference and scaling_governor attribute to the performance profile.
+
+
+network-latency:
+	A profile for low latency network tuning. It is based on the latency-performance profile.  It additionally disables 
+	transparent huge pages and NUMA balancing, and tunes several other network-related sysctl parameters.
+
+	It inherits the latency-performance profile which changes the energy_performance_preference and scaling_governor 
+	attribute to the performance profile.
+
+
+network-throughput:
+	A profile for throughput network tuning.  It is based on the throughput-performance profile. It additionally 
+	increases kernel network buffers.
+
+	It inherits either the latency-performance or throughput-performance profile, and changes the 
+	energy_performance_preference and scaling_governor attribute to the performance profile.
+
+
+powersave:
+	A profile for maximum power saving performance. It can throttle the performance in order to minimize the 
+	actual power consumption. In the current TuneD release it enables USB autosuspend, WiFi power saving, and 
+	Aggressive Link Power Management (ALPM) power savings for SATA host adapters.  It also schedules multi-core 
+	power savings for systems with a low wakeup rate and activates the ondemand governor.  It enables AC97 audio 
+	power saving or, depending on your system, HDA-Intel power savings with a 10 seconds timeout.  If your 
+	system contains a supported Radeon graphics card with enabled KMS, the profile configures it to automatic 
+	power saving. On ASUS Eee PCs, a dynamic Super Hybrid Engine is enabled.
+
+	It changes the energy_performance_preference attribute to the powersave or power energy setting. It also changes 
+	the scaling_governor policy attribute to either the ondemand or powersave CPU governor.
+
+
+throughput-performance:
+	A server profile optimized for high throughput. It disables power savings mechanisms and enables sysctl settings 
+	that improve the throughput performance of the disk and network IO. CPU governor is set to performance.
+
+	It changes the energy_performance_preference and scaling_governor attribute to the performance profile.
+
+
+
+Tuned Profile Inheritance:
+--------------------------
+
+Tuned profiles can be based upon other profiles, with the child profile including all settings from the parent profile.  
+The child profile may also override the settings of the parent profile.  
+
+The following is the high level inheritance relationship between the tuned profiles of interest:
+
+accelerator-performance:  No inheritance, but based upon throughput-performance, so why no inheritance then customize child profile..?
+
+balanced:  No inheritance
+
+cpu-partitioning <-- network-latency <-- latency-performance
+		
+latency-performance:  No inheritance
+
+network-latency <-- latency-performance
+
+network-throughput <-- throughput-performance
+
+powersave:  No inheritance
+
+throughput-performance:  No inheritance
+
+
+Tuned profile inheritance details:
+
+cpu-partitioning/tuned.conf:include=network-latency
+cpu-partitioning/tuned.conf:include=/etc/tuned/cpu-partitioning-variables.conf
+
+network-latency/tuned.conf:include=latency-performance
+
+network-throughput/tuned.conf:include=throughput-performance
+
+
+Tuned Profile Sections:
+----------------------
+
+Tuned profiles are defined with different sections representing different aspects of the system.  The following are examples 
+of different sections within the afore mentioned tuned profiles of interest:
+
+[audio]
+[bootloader]
+[cpu]
+[disk]
+[eeepc_she]
+[include]
+[irqbalance]
+[main]
+[modules]
+[net]
+[scheduler]
+[scheduler.amd]
+[script]
+[scsi_host]
+[sysctl]
+[sysctl.thunderx]
+[sysfs]
+[systemd]
+[variables]
+[video]
+[vm]
+[vm.thunderx]
+
+
+For the immediate moment, the focus will be upon the '[cpu]' sections across the tuned profiles.
+
+accelerator-performance:
+	[cpu]
+	governor=performance
+	energy_perf_bias=performance
+	min_perf_pct=100
+	force_latency=99
+ 
+
+balanced:
+	[cpu]
+	priority=10
+	governor=conservative|powersave
+	energy_perf_bias=normal
+
+
+
+cpu-partitioning (via tuned profile inheritance: cpu-partitioning <--  network-latency <-- latency-performance):
+	[cpu]
+	force_latency=cstate.id:1|3
+	governor=performance
+	energy_perf_bias=performance
+	min_perf_pct=100
+
+
+		
+latency-performance:
+	[cpu]
+	force_latency=cstate.id:1|3
+	governor=performance
+	energy_perf_bias=performance
+	min_perf_pct=100
+
+
+
+network-latency (via tuned profile inheritance:  network-latency <-- latency-performance):
+	[cpu]
+	force_latency=cstate.id:1|3
+	governor=performance
+	energy_perf_bias=performance
+	min_perf_pct=100
+
+
+
+network-throughput (via tuned profile inheritance:  network-throughput <-- throughput-performance):
+	[cpu]
+	governor=performance
+	energy_perf_bias=performance
+	min_perf_pct=100
+
+
+
+powersave:
+	[cpu]
+	governor=ondemand|powersave
+	energy_perf_bias=powersave|power
+
+
+
+throughput-performance:
+	[cpu]
+	governor=performance
+	energy_perf_bias=performance
+	min_perf_pct=100
+
+
+System Profiling:
+=================
+
+x86_energy_perf_policy - Manage Energy vs. Performance Policy via x86 Model Specific Registers
+
+x86_energy_perf_policy [ options ] [ scope ] [field  value]
+       scope: --cpu cpu-list | --pkg pkg-list
+       cpu-list, pkg-list: # | #,# | #-# | all
+       field: --all | --epb | --hwp-epp | --hwp-min | --hwp-max | --hwp-desired
+       other: (--force | --hwp-enable | --turbo-enable)  value)
+       value: # | default | performance | balance-performance | balance-power | power
+
+   VALUE OPTIONS
+       normal | default Set a policy with a normal balance between performance and energy efficiency.   The  processor
+       will  tolerate  minor  performance compromise for potentially significant energy savings.  This is a reasonable
+       default for most desktops and servers.  "default" is a synonym for "normal".
+
+       performance Set a policy for maximum performance, accepting no performance sacrifice for the benefit of  energy
+       efficiency.
+
+       balance-performance  Set  a  policy  with a high priority on performance, but allowing some performance loss to
+       benefit energy efficiency.
+
+       balance-power Set a policy where the performance and power are balanced.  This is the default.
+
+       power Set a policy where the processor can accept a measurable performance  impact  to  maximize  energy  effi‐
+       ciency.
+
+       The  following  table  shows  the  mapping  from the value strings above to actual MSR values.  This mapping is
+       defined in the Linux-kernel header, msr-index.h.
+
+       VALUE STRING        EPB  EPP
+       performance         0    0
+       balance-performance 4    128
+       normal, default     6    128
+       balance-power       8    192
+       power               15   255
+
+
+Commit message regarding MSR_IA32_ENERGY_PERF_BIAS (EPB) versus IA32_HWP_REQUEST.Energy_Performance_Preference (HWP.EPP):
+
+https://patchwork.kernel.org/project/linux-pm/patch/4beec1d7519691b4b6c6b764e75b4e694a09c5f7.1494552478.git.len.brown@intel.com/
+
+x86_energy_perf_policy(8) was created as an example
+of how the user, or upper-level OS, can manage
+MSR_IA32_ENERGY_PERF_BIAS (EPB).
+
+Hardware consults EPB when it makes internal decisions
+balancing energy-saving vs performance.
+For example, should HW quickly or slowly
+transition into and out of power-saving idles states?
+Should HW quickly or slowly ramp frequency up or down
+in response to demand in the turbo-frequency range?
+
+Depending on the processor, EPB may have package, core,
+or CPU thread scope.  As such, the only general policy
+is to write the same value to EPB on every CPU in the system.
+
+Recent platforms add support for Hardware Performance States (HWP).
+HWP effectively extends hardware frequency control from
+the opportunistic turbo-frequency range to control the entire
+range of available processor frequencies.
+
+Just as turbo-mode used EPB, HWP can use EPB to help decicde
+how quickly to ramp frequency and voltage up and down
+in response to changing demand.  Indeed, BDX and BDX-DE,
+the first processors to support HWP, use EPB for this purpose.
+
+Starting in SKL, HWP no longer looks to EPB for influence.
+Instead, it looks in a new MSR specifically for this purpose:
+IA32_HWP_REQUEST.Energy_Performance_Preference (HWP.EPP).
+HWP.EPP is like EPB, except that it is specific to HWP-mode
+frequency selection.  Also, HWP.EPP is defined to have
+per CPU-thread scope.
+
+Starting in SKX, IA32_HWP_REQUEST is augmented by
+IA32_HWP_REQUEST_PKG -- which has the same function, but is
+defined to have package-wide scope.  A new bit in IA32_HWP_REQUEST
+determines if it over-rides the IA32_HWP_REQUEST_PKG or not.
+
+Note that HWP-mode can be enabled in several ways.
+The "in-band" method is for HWP to be exposed in CPUID,
+and for the Linux intel_pstate driver to recognized that,
+and thus enable HWP.  In this case, starting in Linux 4.10, intel_pstate
+exports cpufreq sysfs attribute "energy_performance_preference"
+which can be used to manage HWP.EPP.  This interface can be
+used to set HWP.EPP to these values:
+
+0 performance
+128 balance_performance (default)
+192 balance_power
+255 power
+
+Here, x86_energy_performance_policy is updated to use
+idential strings and values as intel_pstate.
+
+But HWP-mode may also be enabled by firmware before the OS boots,
+and the OS may not be aware of HWP.  In this case, intel_pstate
+is not available to provide sysfs attributes, and x86_energy_perf_policy
+or a similar utility is invaluable for managing HWP.EPP, for
+this utility works the same, no matter if cpufreq is enabled or not.
+
+
+
+Cascade Lake:
+------------
+[root@perf8 home]# cat /etc/redhat-release 
+Red Hat Enterprise Linux release 8.5 (Ootpa)
+[root@perf8 home]# 
+[root@perf8 home]# uname -a
+Linux perf8.perf.lab.eng.bos.redhat.com 4.18.0-348.el8.x86_64 #1 SMP Mon Oct 4 12:17:22 EDT 2021 x86_64 x86_64 x86_64 GNU/Linux
+[root@perf8 home]# 
+[root@perf8 home]# x86_energy_perf_policy --cpu 3
+cpu3: EPB 6
+
+
+
+Ice Lake:
+--------
+[root@perf188 ~]# cat /etc/redhat-release 
+Red Hat Enterprise Linux release 8.5 (Ootpa)
+
+[root@perf188 ~]# uname -a
+Linux perf188.perf.lab.eng.bos.redhat.com 4.18.0-348.12.2.el8_5.x86_64 #1 SMP Mon Jan 17 07:06:06 EST 2022 x86_64 x86_64 x86_64 GNU/Linux
+
+[root@perf188 ~]# x86_energy_perf_policy --cpu 3
+cpu3: EPB 0
+cpu3: HWP_REQ: min 32 max 32 des 0 epp 0 window 0x0 (0*10^0us) use_pkg 0
+cpu3: HWP_CAP: low 8 eff 8 guar 18 high 32
+pkg0: HWP_REQ_PKG: min 0 max 255 des 0 epp 0 window 0x0 (0*10^0us)
+pkg0: MSR_HWP_STATUS: 0x00000005 (Excursion_Min, Guaranteed_Perf_Change)
+pkg1: HWP_REQ_PKG: min 0 max 255 des 0 epp 0 window 0x0 (0*10^0us)
+pkg1: MSR_HWP_STATUS: 0x00000005 (Excursion_Min, Guaranteed_Perf_Change)
+
+
+
+
+Kernel Documentation:
+=====================
+
+intel_pstate CPU Performance Scaling Driver:
+
+https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_pstate.html
+
+
+Intel Performance and Energy Bias Hint (EPB):
+
+https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
+
+Intel Performance and Energy Bias Attribute in sysfs:
+
+The Intel Performance and Energy Bias Hint (EPB) value for a given (logical) CPU can be checked or updated through a 
+sysfs attribute (file) under /sys/devices/system/cpu/cpu<N>/power/, where the CPU number <N> is allocated at the 
+system initialization time:
+
+energy_perf_bias:
+Shows the current EPB value for the CPU in a sliding scale 0 - 15, where a value of 0 corresponds to a hint preference 
+for highest performance and a value of 15 corresponds to the maximum energy savings.
+
+In order to update the EPB value for the CPU, this attribute can be written to, either with a number in the 0 - 15 sliding scale above, 
+or with one of the strings: “performance”, “balance-performance”, “normal”, “balance-power”, “power” that represent values 
+reflected by their meaning.
+
+This attribute is present for all online CPUs supporting the EPB feature.
+
+Note that while the EPB interface to the processor is defined at the logical CPU level, the physical register backing it may be 
+shared by multiple CPUs (for example, SMT siblings or cores in one package). For this reason, updating the EPB value for one CPU 
+may cause the EPB values for other CPUs to change.
+
+
+
+P-States:
+=========
+
+Linux Foundation P-state presentation from LinuxCon Europe 2015:
+
+https://events.static.linuxfound.org/sites/events/files/slides/LinuxConEurope_2015.pdf
+
+
+Intel Power Management, Univeristy of Dresden 2020:
+
+https://events.it4i.cz/event/39/attachments/150/344/04-2020-01-29-prace-ee-DC-RS.pdf
+
+
+CPU performance scaling subsystem in the Linux kernel (CPUFreq):
+================================================================
+
+https://www.kernel.org/doc/html/latest/admin-guide/pm/cpufreq.html
+
+CPUFreq is subsystem that consists of three layers of code: : 1) the core; 2) scaling governors; and 3) scaling drivers
+
+1.  The core
+The CPUFreq core provides the common code infrastructure and user space interfaces for all platforms that support CPU 
+performance scaling. It defines the basic framework in which the other components operate.
+
+2.  The scaling governors
+The CPUFreq scaling governors implement algorithms to estimate the required CPU capacity. As a rule, each governor 
+implements one, possibly parametrized, scaling algorithm.
+
+3.  The scaling drivers
+Scaling drivers talk to the hardware. They provide scaling governors with information on the available 
+P-states (or P-state ranges in some cases) and access platform-specific hardware interfaces to change CPU P-states as 
+requested by scaling governors.
+
+
+CPUFreq Policy Objects:
+----------------------
+In some cases the hardware interface for P-state control is shared by multiple CPUs. That is, for example, the same register 
+(or set of registers) is used to control the P-state of multiple CPUs at the same time and writing to it affects all of those 
+CPUs simultaneously.
+
+Sets of CPUs sharing hardware P-state control interfaces are represented by CPUFreq as struct cpufreq_policy objects. For consistency, 
+struct cpufreq_policy is also used when there is only one CPU in the given set.
+
+The CPUFreq core maintains a pointer to a struct cpufreq_policy object for every CPU in the system, including CPUs that are 
+currently offline. If multiple CPUs share the same hardware P-state control interface, all of the pointers corresponding to them 
+point to the same struct cpufreq_policy object.
+
+CPUFreq uses struct cpufreq_policy as its basic data type and the design of its user space interface is based on the policy concept.
+
+/sys/devices/system/cpu/cpufreq/policy'X'/
+
+
+The generic attributes under /sys/devices/system/cpu/cpufreq/policyX/ are the following:
+
+affected_cpus:
+--------------
+List of online CPUs belonging to this policy (i.e. sharing the hardware performance scaling interface represented by 
+the policyX policy object).
+
+
+bios_limit:
+-----------
+If the platform firmware (BIOS) tells the OS to apply an upper limit to CPU frequencies, that limit will be reported 
+through this attribute (if present).
+
+The existence of the limit may be a result of some (often unintentional) BIOS settings, restrictions coming from a 
+service processor or another BIOS/HW-based mechanisms.
+
+This does not cover ACPI thermal limitations which can be discovered through a generic thermal driver.
+
+This attribute is not present if the scaling driver in use does not support it.
+
+
+cpuinfo_cur_freq:
+-----------------
+Current frequency of the CPUs belonging to this policy as obtained from the hardware (in KHz).
+
+This is expected to be the frequency the hardware actually runs at. If that frequency cannot be determined, 
+this attribute should not be present.
+
+
+cpuinfo_max_freq:
+-----------------
+Maximum possible operating frequency the CPUs belonging to this policy can run at (in kHz).
+
+
+cpuinfo_min_freq:
+-----------------
+Minimum possible operating frequency the CPUs belonging to this policy can run at (in kHz).
+
+
+cpuinfo_transition_latency:
+---------------------------
+The time it takes to switch the CPUs belonging to this policy from one P-state to another, in nanoseconds.
+
+If unknown or if known to be so high that the scaling driver does not work with the ondemand governor, 
+-1 (CPUFREQ_ETERNAL) will be returned by reads from this attribute.
+
+
+related_cpus:
+-------------
+List of all (online and offline) CPUs belonging to this policy.
+
+
+scaling_available_governors:
+----------------------------
+List of CPUFreq scaling governors present in the kernel that can be attached to this policy or (if the intel_pstate 
+scaling driver is in use) list of scaling algorithms provided by the driver that can be applied to this policy.
+
+[Note that some governors are modular and it may be necessary to load a kernel module for the governor held by it to 
+become available and be listed by this attribute.]
+
+
+scaling_cur_freq:
+-----------------
+Current frequency of all of the CPUs belonging to this policy (in kHz).
+
+In the majority of cases, this is the frequency of the last P-state requested by the scaling driver from the hardware 
+using the scaling interface provided by it, which may or may not reflect the frequency the CPU is actually running 
+at (due to hardware design and other limitations).
+
+Some architectures (e.g. x86) may attempt to provide information more precisely reflecting the current CPU frequency 
+through this attribute, but that still may not be the exact current CPU frequency as seen by the hardware at the moment.
+
+
+scaling_driver:
+---------------
+The scaling driver currently in use.
+
+
+scaling_governor:
+-----------------
+The scaling governor currently attached to this policy or (if the intel_pstate scaling driver is in use) the scaling algorithm 
+provided by the driver that is currently applied to this policy.
+
+This attribute is read-write and writing to it will cause a new scaling governor to be attached to this policy or a new scaling 
+algorithm provided by the scaling driver to be applied to it (in the intel_pstate case), as indicated by the string written to 
+this attribute (which must be one of the names listed by the scaling_available_governors attribute described above).
+
+
+scaling_max_freq:
+-----------------
+Maximum frequency the CPUs belonging to this policy are allowed to be running at (in kHz).
+
+This attribute is read-write and writing a string representing an integer to it will cause a new limit to be set (it must not 
+be lower than the value of the scaling_min_freq attribute).
+
+
+scaling_min_freq:
+-----------------
+Minimum frequency the CPUs belonging to this policy are allowed to be running at (in kHz).
+
+This attribute is read-write and writing a string representing a non-negative integer to it will cause a new limit to be 
+set (it must not be higher than the value of the scaling_max_freq attribute).
+
+
+scaling_setspeed:
+This attribute is functional only if the userspace scaling governor is attached to the given policy.
+
+It returns the last frequency requested by the governor (in kHz) or can be written to in order to set a new frequency for the policy.
+
+
