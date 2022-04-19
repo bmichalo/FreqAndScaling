@@ -451,6 +451,20 @@ Intel Power Management, Univeristy of Dresden 2020:
 https://events.it4i.cz/event/39/attachments/150/344/04-2020-01-29-prace-ee-DC-RS.pdf
 
 
+Performance state:
+While a device or processor operates (D0 and C0, respectively), it can be in one of several power-performance states. 
+These states are implementation-dependent. P0 is always the highest-performance state, with P1 to Pn being successively 
+lower-performance states, up to an implementation-specific limit of n no greater than 16.
+
+P-states have become known as SpeedStep in Intel processors, as PowerNow! or Cool'n'Quiet in AMD processors.
+
+P0 maximum power and frequency
+P1 less than P0, voltage and frequency scaled
+P2 less than P1, voltage and frequency scaled
+Pn less than P(n–1), voltage and frequency scaled
+
+
+
 CPU performance scaling subsystem in the Linux kernel (CPUFreq):
 ================================================================
 
@@ -464,12 +478,14 @@ performance scaling. It defines the basic framework in which the other component
 
 2.  The scaling governors
 The CPUFreq scaling governors implement algorithms to estimate the required CPU capacity. As a rule, each governor 
-implements one, possibly parametrized, scaling algorithm.
+implements one, possibly parametrized, scaling algorithm.  Scaling governors implement the algorithms to compute 
+the desired CPU frequency, potentially based off of the system's needs.
 
 3.  The scaling drivers
 Scaling drivers talk to the hardware. They provide scaling governors with information on the available 
 P-states (or P-state ranges in some cases) and access platform-specific hardware interfaces to change CPU P-states as 
-requested by scaling governors.
+requested by scaling governors.  Scaling drivers interact with the CPU directly, enacting the desired frequencies that 
+the current governor is requesting.
 
 
 CPUFreq Policy Objects:

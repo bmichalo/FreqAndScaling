@@ -117,5 +117,17 @@ fi
 echo ""
 echo ""
 
+echo "Idle states:"
+echo "============"
+
+echo "/sys/module/intel_idle/parameters/use_acpi ...... `cat /sys/module/intel_idle/parameters/use_acpi`"
+echo "/sys/module/intel_idle/parameters/states_off .... `cat /sys/module/intel_idle/parameters/states_off`"
+echo "/sys/module/intel_idle/parameters/no_acpi ....... `cat /sys/module/intel_idle/parameters/no_acpi`"
+echo "/sys/module/intel_idle/parameters/max_cstate .... `cat /sys/module/intel_idle/parameters/max_cstate`"
 
 
+
+
+
+echo ""
+echo ""
