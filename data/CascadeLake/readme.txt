@@ -8,3 +8,9 @@ Current active profile: bills-intel-pstate-hwp-only
 [root@perf8 FreqAndScaling]# tuned-adm active
 Current active profile: bills-intel-pstate-disable
 
+4) Same as (1), but echo 'active' to /sys/devices/system/cpu/intel_pstate/status 
+
+5) tuned cpu-partiioning profile but omitted intel_pstate=disable
+
+6) Same as (5), but then echo 'active' to /sys/devices/system/cpu/intel_pstate/status 
+

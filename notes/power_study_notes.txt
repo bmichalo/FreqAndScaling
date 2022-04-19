@@ -812,6 +812,30 @@ P2 less than P1, voltage and frequency scaled
 Pn less than P(n–1), voltage and frequency scaled
 
 
+How to determine if a processor has HWP control:
+
+https://access.redhat.com/solutions/6773531
+
+Cascade Lake:
+[root@perf8 ~]# lscpu|grep Flags|tr ' ' '\n'|sort|grep hwp
+
+(nothing)
+
+Cascade Lake N:
+[root@perf166 cpufreq]# lscpu|grep Flags|tr ' ' '\n'|sort|grep hwp
+hwp
+hwp_act_window
+hwp_epp
+hwp_pkg_req
+
+Ice Lake:
+[root@perf188 opt]# lscpu|grep Flags|tr ' ' '\n'|sort|grep hwp
+hwp
+hwp_act_window
+hwp_epp
+hwp_pkg_req
+
+
 
 CPU performance scaling subsystem in the Linux kernel (CPUFreq):
 ================================================================
