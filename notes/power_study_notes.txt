@@ -384,6 +384,24 @@ cpu3: EPB 6
 
 
 
+Cascade Lake N:
+---------------
+[root@perf166 ~]# cat /etc/redhat-release 
+Red Hat Enterprise Linux release 8.5 (Ootpa)
+[root@perf166 ~]# 
+[root@perf166 ~]# uname -a
+Linux perf166.perf.lab.eng.bos.redhat.com 4.18.0-348.12.2.el8_5.x86_64 #1 SMP Mon Jan 17 07:06:06 EST 2022 x86_64 x86_64 x86_64 GNU/Linux
+[root@perf166 ~]# x86_energy_perf_policy --cpu 3
+cpu3: EPB 7
+cpu3: HWP_REQ: min 35 max 35 des 0 epp 0 window 0x0 (0*10^0us) use_pkg 0
+cpu3: HWP_CAP: low 7 eff 10 guar 23 high 35
+pkg0: HWP_REQ_PKG: min 0 max 255 des 0 epp 85 window 0x0 (0*10^0us)
+pkg0: MSR_HWP_STATUS: 0x00000004 (Excursion_Min, No-Guaranteed_Perf_Change)
+pkg1: HWP_REQ_PKG: min 0 max 255 des 0 epp 85 window 0x0 (0*10^0us)
+pkg1: MSR_HWP_STATUS: 0x00000004 (Excursion_Min, No-Guaranteed_Perf_Change)
+
+
+
 Ice Lake:
 --------
 [root@perf188 ~]# cat /etc/redhat-release 
@@ -410,6 +428,336 @@ Kernel Documentation:
 intel_pstate CPU Performance Scaling Driver:
 
 https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_pstate.html
+
+
+Cascade Lake:
+-------------
+[root@perf8 intel_pstate]# cat /proc/cmdline 
+BOOT_IMAGE=(hd0,msdos1)/vmlinuz-4.18.0-348.el8.x86_64 root=/dev/mapper/rhel_perf8-root ro crashkernel=auto resume=/dev/mapper/rhel_perf8-swap rd.lvm.lv=rhel_perf8/root rd.lvm.lv=rhel_perf8/swap isolcpus=3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89,91,93,95 default_hugepagesz=1GB hugepagesz=1G hugepages=64 intel_iommu=on iommu=pt tsc=nowatchdog
+
+[root@perf8 cpu]# pwd
+/sys/devices/system/cpu
+
+[root@perf8 cpu]# tree intel_pstate/
+intel_pstate/
+├── max_perf_pct
+├── min_perf_pct
+├── no_turbo
+├── num_pstates
+├── status
+└── turbo_pct
+
+[root@perf8 intel_pstate]# pwd
+/sys/devices/system/cpu/intel_pstate
+[root@perf8 intel_pstate]# find . -type f -printf "\n%p\n" -exec cat {} \;
+
+./no_turbo
+0
+
+./num_pstates
+29
+
+./status
+passive
+
+./turbo_pct
+35
+
+./max_perf_pct
+100
+
+./min_perf_pct
+30
+
+[root@perf8 intel_pstate]# tree /sys/devices/system/cpu/cpu0/cpufreq
+/sys/devices/system/cpu/cpu0/cpufreq
+├── affected_cpus
+├── cpuinfo_max_freq
+├── cpuinfo_min_freq
+├── cpuinfo_transition_latency
+├── related_cpus
+├── scaling_available_governors
+├── scaling_cur_freq
+├── scaling_driver
+├── scaling_governor
+├── scaling_max_freq
+├── scaling_min_freq
+└── scaling_setspeed
+
+[root@perf8 cpufreq]# pwd
+/sys/devices/system/cpu/cpu0/cpufreq
+[root@perf8 cpufreq]# find . -type f -printf "\n%p\n" -exec cat {} \;
+
+./scaling_min_freq
+1200000
+
+./scaling_available_governors
+conservative ondemand userspace powersave performance schedutil 
+
+./scaling_governor
+performance
+
+./cpuinfo_max_freq
+4000000
+
+./related_cpus
+0
+
+./scaling_cur_freq
+1828593
+
+./scaling_setspeed
+<unsupported>
+
+./affected_cpus
+0
+
+./scaling_max_freq
+4000000
+
+./cpuinfo_transition_latency
+20000
+
+./scaling_driver
+intel_cpufreq
+
+./cpuinfo_min_freq
+1200000
+
+
+
+
+Cascade Lake N:
+---------------
+[root@perf166 cpu]# cat /proc/cmdline 
+BOOT_IMAGE=(hd0,msdos1)/vmlinuz-4.18.0-348.12.2.el8_5.x86_64 root=/dev/mapper/perf166-root ro crashkernel=auto resume=/dev/mapper/perf166-swap rd.lvm.lv=perf166/root rd.lvm.lv=perf166/swap
+
+[root@perf166 cpu]# tree intel_pstate/
+intel_pstate/
+├── hwp_dynamic_boost
+├── max_perf_pct
+├── min_perf_pct
+├── no_turbo
+├── num_pstates
+├── status
+└── turbo_pct
+
+[root@perf166 intel_pstate]# pwd
+/sys/devices/system/cpu/intel_pstate
+[root@perf166 intel_pstate]# find . -type f -printf "\n%p\n" -exec cat {} \;
+
+./no_turbo
+0
+
+./num_pstates
+26
+
+./status
+active
+
+./turbo_pct
+47
+
+./max_perf_pct
+100
+
+./hwp_dynamic_boost
+1
+
+./min_perf_pct
+28
+
+
+[root@perf166 intel_pstate]# tree /sys/devices/system/cpu/cpu0/cpufreq
+/sys/devices/system/cpu/cpu0/cpufreq
+├── affected_cpus
+├── base_frequency
+├── cpuinfo_max_freq
+├── cpuinfo_min_freq
+├── cpuinfo_transition_latency
+├── energy_performance_available_preferences
+├── energy_performance_preference
+├── related_cpus
+├── scaling_available_governors
+├── scaling_cur_freq
+├── scaling_driver
+├── scaling_governor
+├── scaling_max_freq
+├── scaling_min_freq
+└── scaling_setspeed
+
+
+[root@perf166 cpufreq]# pwd
+/sys/devices/system/cpu/cpu0/cpufreq
+
+[root@perf166 cpufreq]# find . -type f -printf "\n%p\n" -exec cat {} \;
+
+./energy_performance_available_preferences
+default performance balance_performance balance_power power 
+
+./scaling_min_freq
+1000000
+
+./scaling_available_governors
+performance powersave
+
+./base_frequency
+2100000
+
+./scaling_governor
+performance
+
+./cpuinfo_max_freq
+3500000
+
+./related_cpus
+0
+
+./scaling_cur_freq
+2696535
+
+./scaling_setspeed
+<unsupported>
+
+./affected_cpus
+0
+
+./scaling_max_freq
+3500000
+
+./cpuinfo_transition_latency
+0
+
+./energy_performance_preference
+performance
+
+./scaling_driver
+intel_pstate
+
+./cpuinfo_min_freq
+1000000
+
+
+
+
+
+
+
+
+
+Ice Lake:
+---------
+[root@perf188 ~]# cat /proc/cmdline 
+BOOT_IMAGE=(hd0,msdos1)/vmlinuz-4.18.0-348.12.2.el8_5.x86_64 root=/dev/mapper/rhel84_perf188-root ro crashkernel=auto resume=/dev/mapper/rhel84_perf188-swap rd.lvm.lv=rhel84_perf188/root rd.lvm.lv=rhel84_perf188/swap isolcpus=2-63,66-127 default_hugepagesz=1GB hugepagesz=1G hugepages=256 intel_iommu=on iommu=pt rcupdate.rcu_normal_after_boot=0 skew_tick=1 nohz=on nohz_full=2-63,66-127 rcu_nocbs=2-63,66-127 tuned.non_isolcpus=00000003,00000000,00000003 nosoftlockup
+
+
+[root@perf188 cpu]# pwd
+/sys/devices/system/cpu
+
+[root@perf188 cpu]# tree intel_pstate/
+intel_pstate/
+├── hwp_dynamic_boost
+├── max_perf_pct
+├── min_perf_pct
+├── no_turbo
+├── num_pstates
+├── status
+└── turbo_pct
+
+[root@perf188 intel_pstate]# pwd
+/sys/devices/system/cpu/intel_pstate
+[root@perf188 intel_pstate]# find . -type f -printf "\n%p\n" -exec cat {} \;
+
+./no_turbo
+0
+
+./num_pstates
+25
+
+./status
+active
+
+./turbo_pct
+57
+
+./max_perf_pct
+100
+
+./hwp_dynamic_boost
+0
+
+./min_perf_pct
+100
+
+
+
+[root@perf188 intel_pstate]# tree /sys/devices/system/cpu/cpu0/cpufreq
+/sys/devices/system/cpu/cpu0/cpufreq
+├── affected_cpus
+├── base_frequency
+├── cpuinfo_max_freq
+├── cpuinfo_min_freq
+├── cpuinfo_transition_latency
+├── energy_performance_available_preferences
+├── energy_performance_preference
+├── related_cpus
+├── scaling_available_governors
+├── scaling_cur_freq
+├── scaling_driver
+├── scaling_governor
+├── scaling_max_freq
+├── scaling_min_freq
+└── scaling_setspeed
+
+[root@perf188 cpufreq]# find . -type f -printf "\n%p\n" -exec cat {} \;
+
+./energy_performance_available_preferences
+default performance balance_performance balance_power power 
+
+./scaling_min_freq
+800000
+
+./scaling_available_governors
+performance powersave
+
+./base_frequency
+1800000
+
+./scaling_governor
+performance
+
+./cpuinfo_max_freq
+3200000
+
+./related_cpus
+0
+
+./scaling_cur_freq
+2599666
+
+./scaling_setspeed
+<unsupported>
+
+./affected_cpus
+0
+
+./scaling_max_freq
+3200000
+
+./cpuinfo_transition_latency
+0
+
+./energy_performance_preference
+performance
+
+./scaling_driver
+intel_pstate
+
+./cpuinfo_min_freq
+800000
+
+
+
 
 
 Intel Performance and Energy Bias Hint (EPB):
