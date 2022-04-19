@@ -125,9 +125,14 @@ echo "/sys/module/intel_idle/parameters/states_off .... `cat /sys/module/intel_i
 echo "/sys/module/intel_idle/parameters/no_acpi ....... `cat /sys/module/intel_idle/parameters/no_acpi`"
 echo "/sys/module/intel_idle/parameters/max_cstate .... `cat /sys/module/intel_idle/parameters/max_cstate`"
 
+echo ""
+echo ""
 
-
-
+timeout 60s turbostat -c 3,51,5,53,7,55,9,57 -i 3 --out turbostat.txt
 
 echo ""
 echo ""
+
+
+
+
