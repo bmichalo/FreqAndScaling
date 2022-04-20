@@ -3,13 +3,13 @@ Tools and notes about Linux frequency and scaling
 
 Basic directory structure:
 
-notes:  Detailed notes about the workings of the CPU performance scaling subsystem of the Linux kernel, 
+- notes:  Detailed notes about the workings of the CPU performance scaling subsystem of the Linux kernel, 
         including intel_cpufreq and intel_pstate scaling drivers.
 
-tools:  Tools to query and set a systems' frequency settings via sysfs.  Also produces a turbostat output 
+- tools:  Tools to query and set a systems' frequency settings via sysfs.  Also produces a turbostat output 
         file over a period of 60 seconds.
 
-data:   Using the tool gather_system_power_info.sh, CPU performance scaling subsystem attributes 
+- data:   Using the tool gather_system_power_info.sh, CPU performance scaling subsystem attributes 
         across Cascade Lake, Cascade Lake N, and Ice Lake processors.  Note most experiments involved 
         Cascade Lake - see data/CascadeLake/readme.txt
  
