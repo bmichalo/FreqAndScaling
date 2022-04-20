@@ -13,7 +13,7 @@ data:   Using the tool gather_system_power_info.sh, CPU performance scaling subs
         across Cascade Lake, Cascade Lake N, and Ice Lake processors.  Note most experiments involved 
         Cascade Lake - see data/CascadeLake/readme.txt
  
-
+<pre>
 # git clone https://github.com/bmichalo/FreqAndScaling
 
 # cd FreqAndScaling
@@ -991,6 +991,6 @@ Idle states:
 
 Gathering turbostat data for 60 seconds...
 
-
+</pre>
 
 
